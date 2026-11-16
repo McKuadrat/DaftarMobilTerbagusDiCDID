@@ -1,38 +1,211 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Babadook Jumpscare</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            background-color: black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        img {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        audio {
-            display: none;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ZIP HTML Opener</title>
+<style>
+:root{--bg:#0e1116;--card:#171b22;--line:#2a303b;--tx:#eceff4;--mut:#8f98a8;--ac:#4f8cff;--ok:#1f9d5b;color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--bg:#f3f5f9;--card:#fff;--line:#d9dfea;--tx:#161a22;--mut:#657085;--ac:#2563eb;color-scheme:light}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+body.lock{overflow:hidden}
+main{width:100%;max-width:520px}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 18px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+button{font:inherit;cursor:pointer}
+#drop{border:2px dashed var(--line);border-radius:14px;padding:36px 16px;text-align:center;cursor:pointer}
+#drop:hover,#drop.over,#drop:focus-visible{border-color:var(--ac);outline:0;background:color-mix(in srgb,var(--ac) 8%,transparent)}
+.btn{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--tx);font-weight:600}
+.btn.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.row{display:grid;gap:10px;margin-top:16px}
+.link{background:none;border:0;color:var(--ac);padding:0;font-size:14px;flex:none}
+.item{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:11px 12px;margin-bottom:8px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--tx);word-break:break-all;font-size:14px}
+.item.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,transparent)}
+.dot{flex:none;width:16px;height:16px;border-radius:50%;border:2px solid var(--mut)}
+.item.on .dot{border-color:var(--ac);background:radial-gradient(var(--ac) 45%,transparent 50%)}
+.tag{flex:none;margin-left:auto;font-size:11px;font-style:normal;padding:2px 8px;border-radius:99px;background:var(--ok);color:#fff}
+.err{color:#ff6b6b;margin:12px 0 0;font-size:14px}
+#viewer{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
+#bar{display:flex;align-items:center;gap:8px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));background:var(--card);border-bottom:1px solid var(--line)}
+#bar span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:var(--mut)}
+#bar button{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--tx);font-size:14px}
+#frame{flex:1;width:100%;border:0;background:#fff}
+#viewer[data-mode=full] #bar{display:none}
+#fab{display:none;position:absolute;top:max(8px,env(safe-area-inset-top));right:8px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.5);color:#fff;font-size:17px;opacity:.45;z-index:2}
+#viewer[data-mode=full] #fab{display:block}
+#load{position:absolute;inset:0;z-index:3;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.meter{width:min(320px,80%);height:8px;border-radius:9px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--ac)}
+</style>
 </head>
 <body>
-    <img src="Babadook.webp" alt="Babadook Image">
-    <audio autoplay loop>
-        <source src="jumpscare.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
+<main>
+  <h1>ZIP HTML Opener</h1>
+  <p class="sub">Buka game atau web dari file ZIP langsung di browser. Semua diproses di perangkatmu, tidak ada yang diunggah.</p>
+
+  <section class="card" id="pick">
+    <div id="drop" tabindex="0" role="button">
+      <div style="font-size:34px">📦</div>
+      <b>Pilih file ZIP</b>
+      <div class="sub" style="margin:4px 0 0">atau seret ke sini</div>
+    </div>
+    <input type="file" id="file" accept=".zip,application/zip,application/x-zip-compressed" hidden>
+  </section>
+
+  <section class="card" id="ready" hidden>
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
+      <b id="zname" style="word-break:break-all"></b>
+      <button class="link" id="change">Ganti ZIP</button>
+    </div>
+    <p class="sub" id="count" style="margin:6px 0 12px"></p>
+    <div id="list"></div>
+    <div class="row">
+      <button class="btn pri" id="bFull">Open with Full Screen</button>
+      <button class="btn" id="bNorm">Open with Normal</button>
+    </div>
+  </section>
+
+  <p class="err" id="err" hidden></p>
+</main>
+
+<div id="viewer" hidden data-mode="normal">
+  <div id="bar">
+    <span id="vtitle"></span>
+    <button id="bToFull">Full Screen</button>
+    <button id="bClose">Tutup</button>
+  </div>
+  <button id="fab" title="Keluar dari layar penuh">✕</button>
+  <iframe id="frame" allow="autoplay; fullscreen; gamepad; accelerometer; gyroscope; clipboard-write" allowfullscreen></iframe>
+  <div id="load">
+    <div id="ltxt">Menyiapkan…</div>
+    <div class="meter"><i id="lbar"></i></div>
+    <button class="btn" id="bCancel" style="width:auto;padding:10px 24px">Batal</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const CACHE = 'zip-opener-v1';
+const MIME = {html:'text/html; charset=utf-8',htm:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',mjs:'text/javascript; charset=utf-8',json:'application/json; charset=utf-8',txt:'text/plain; charset=utf-8',xml:'application/xml',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',ico:'image/x-icon',bmp:'image/bmp',mp3:'audio/mpeg',ogg:'audio/ogg',oga:'audio/ogg',wav:'audio/wav',m4a:'audio/mp4',aac:'audio/aac',flac:'audio/flac',mp4:'video/mp4',webm:'video/webm',ogv:'video/ogg',woff:'font/woff',woff2:'font/woff2',ttf:'font/ttf',otf:'font/otf',wasm:'application/wasm',glb:'model/gltf-binary',gltf:'model/gltf+json'};
+const mime = n => MIME[n.split('.').pop().toLowerCase()] || 'application/octet-stream';
+const enc = p => p.split('/').map(encodeURIComponent).join('/');
+let zip, files = [], htmls = [], sel = '', scope = '', run = 0;
+
+// Service worker menyajikan isi ZIP sebagai file "asli" supaya musik, gambar, CSS, JS, fetch(), dll jalan normal
+const swReady = ('serviceWorker' in navigator && window.caches)
+  ? navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready)
+  : Promise.reject(new Error('Browser tidak mendukung Service Worker. Buka lewat HTTPS (GitHub Pages) dan jangan pakai mode privat.'));
+swReady.catch(() => {});
+
+const showErr = m => { const e = $('#err'); e.textContent = m; e.hidden = false; };
+
+/* ---------- pilih ZIP ---------- */
+const drop = $('#drop'), inp = $('#file');
+drop.onclick = () => inp.click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } };
+inp.onchange = () => inp.files[0] && load(inp.files[0]);
+['dragover', 'dragenter'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; f && load(f); });
+$('#change').onclick = () => { $('#ready').hidden = true; $('#pick').hidden = false; };
+
+async function load(f) {
+  $('#err').hidden = true;
+  try { zip = await JSZip.loadAsync(f); }
+  catch (e) { inp.value = ''; return showErr('File ini bukan ZIP yang valid atau rusak.'); }
+  files = Object.keys(zip.files).filter(n => !zip.files[n].dir && !/(^|\/)(__MACOSX\/|\._)/.test(n));
+  // urutan: index.html paling dangkal dulu
+  const sc = n => n.split('/').length * 2 + (/(^|\/)index\.html?$/i.test(n) ? 0 : 1);
+  htmls = files.filter(n => /\.html?$/i.test(n)).sort((a, b) => sc(a) - sc(b) || a.localeCompare(b));
+  inp.value = '';
+  if (!htmls.length) return showErr('Tidak ada file HTML di dalam ZIP ini.');
+  sel = htmls[0];
+  $('#zname').textContent = f.name;
+  $('#count').textContent = htmls.length === 1
+    ? '1 file HTML ditemukan, langsung dibuka.'
+    : htmls.length + ' file HTML ditemukan. Pilih file utamanya:';
+  renderList();
+  $('#pick').hidden = true; $('#ready').hidden = false;
+}
+
+function renderList() {
+  const L = $('#list'); L.innerHTML = '';
+  htmls.forEach((n, i) => {
+    const b = document.createElement('button');
+    b.className = 'item' + (n === sel ? ' on' : '');
+    b.innerHTML = '<span class="dot"></span><span></span>' + (i === 0 && htmls.length > 1 ? '<em class="tag">disarankan</em>' : '');
+    b.children[1].textContent = n;
+    b.onclick = () => { sel = n; renderList(); };
+    L.appendChild(b);
+  });
+}
+
+/* ---------- buka ---------- */
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+const setMode = m => { $('#viewer').dataset.mode = m; };
+function goFull() {
+  const v = $('#viewer'), f = v.requestFullscreen || v.webkitRequestFullscreen;
+  try { const p = f && f.call(v); p && p.catch && p.catch(() => {}); } catch (_) {}
+}
+function exitFull() {
+  if (fsEl()) try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (_) {}
+}
+function onFs() { const v = $('#viewer'); if (!fsEl() && !v.hidden && v.dataset.mode === 'full') setMode('normal'); }
+document.addEventListener('fullscreenchange', onFs);
+document.addEventListener('webkitfullscreenchange', onFs);
+
+const prog = (r, t) => { $('#lbar').style.width = (r * 100) + '%'; $('#ltxt').textContent = t; };
+
+function closeViewer() {
+  run++;
+  exitFull();
+  $('#viewer').hidden = true;
+  $('#frame').src = 'about:blank';
+  document.body.classList.remove('lock');
+  window.caches && caches.delete(CACHE);
+}
+
+async function openZip(mode) {
+  const id = ++run;
+  $('#viewer').hidden = false;
+  document.body.classList.add('lock');
+  setMode(mode);
+  $('#vtitle').textContent = sel;
+  $('#load').hidden = false;
+  prog(0, 'Menyiapkan…');
+  if (mode === 'full') goFull(); // harus langsung saat tombol ditekan
+  try {
+    const reg = await swReady;
+    scope = reg.scope;
+    await caches.delete(CACHE);
+    const cache = await caches.open(CACHE);
+    let i = 0;
+    for (const n of files) {
+      if (id !== run) return;
+      const blob = await zip.files[n].async('blob');
+      await cache.put(scope + 'k/' + encodeURIComponent(n),
+        new Response(blob, { headers: { 'Content-Type': mime(n), 'Accept-Ranges': 'bytes' } }));
+      prog(++i / files.length, 'Mengekstrak ' + i + '/' + files.length + '…');
+    }
+    if (id !== run) return;
+    $('#frame').src = scope + '__zip__/' + enc(sel);
+    $('#load').hidden = true;
+  } catch (e) {
+    if (id === run) { closeViewer(); showErr('Gagal membuka: ' + (e.message || e)); }
+  }
+}
+
+$('#bFull').onclick = () => openZip('full');
+$('#bNorm').onclick = () => openZip('normal');
+$('#bToFull').onclick = () => { setMode('full'); goFull(); };
+$('#fab').onclick = () => { setMode('normal'); exitFull(); };
+$('#bClose').onclick = closeViewer;
+$('#bCancel').onclick = closeViewer;
+</script>
 </body>
 </html>
